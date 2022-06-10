@@ -1,0 +1,135 @@
+import request import request import pandas as pd from lxml import etree
+
+html = 'https://ncov.dxy.cn/ncovh5/view/pneumonia' html_data = requests.get（html） html_data.encoding = 'utf-8' html_data = etree.HTML（html_data.text， etree.HTMLParser（）） html_data = html_data.xpath（ '//*[@id=“getListByCountryTypeService2true”]/text（）'） # xpath方法选择疫情的数据集合 ncov_world = html_data[0][49：-12] ncov_world = ncov_world.replace（'true'， 'True'） ncov_world = ncov_world.replace（'false'， 'False'） ncov_world = eval（ncov_world）
+
+国家 = [] 确认 = [] 活着 = [] 死亡 = []
+
+for i in ncov_world： # 分离国家名称，确诊人数，治愈人数和死亡人数并存入dataframe里备用 country.append（i['provinceName']） confirmed.append（i['confirmedCount']） lived.append（i['curedCount']） dead.append（i['deadCount']）
+
+data_world = pd。DataFrame（） data_world['国家名称'] = country data_world['确诊人数'] = confirm data_world['治愈人数'] = live data_world['死亡人数'] = dead data_world.head（5）
+
+import pandas as pd data_world = pd.read_csv（'https://labfile.oss.aliyuncs.com/courses/2791/data_world.csv'） data_world.head（5）
+
+data_economy = pd.read_csv（ “https://labfile.oss.aliyuncs.com/courses/2791/gpd_2016_2020.csv”， index_col=0） time_index = pd.date_range（start='2016'， periods=18， freq='Q'） data_economy.index = time_index data_economy
+
+data_area = pd.read_csv（'https://labfile.oss.aliyuncs.com/courses/2791/DXYArea.csv'） data_news = pd.read_csv（'https://labfile.oss.aliyuncs.com/courses/2791/DXYNews.csv')
+
+data_area = data_area.loc[data_area['countryName'] == data_area['ProvinceName']] data_area_times = data_area[['countryName'， 'province_confirmedCount'， 'province_curedCount'， 'province_deadCount'， 'updateTime']]
+
+时间 = pd。DatetimeIndex（data_area_times['updateTime']） # 根据疫情的更新时间来生成时间序列 data_area_times.index = time # 生成索引 data_area_times = data_area_times.drop（'updateTime'， axis=1） data_area_times.head（5）
+
+data_area_times.isnull（）.any（） # 查询是否有空值
+
+data_news_times = data_news[['pubDate'， 'title'， 'summary']] 时间 = pd.DatetimeIndex（data_news_times['pubDate']） data_news_times.index = time # 生成新闻数据的时间索引 data_news_times = data_news_times.drop（'pubDate'， axis=1） data_news_times.head（5）
+
+print（data_world.isnull（）.any（）） print（data_economy.isnull（）.any（）） print（data_area_times.isnull（）.any（）） print（data_news_times.isnull（）.any（）） # 确认各个数据集是否空集
+
+import matplotlib.pyplot as plt import matplotlib import os
+
+%matplotlib inline
+
+指定中文字体
+fpath = os.path.join（r“D：\桌面\NotoSansCJK.otf”） myfont = matplotlib.font_manager.FontProperties（fname=fpath）
+
+绘图
+data_world = data_world.sort_values（by='确诊人数'， ascending=False） # 按确诊人数进行排序 data_world_set = data_world[['确诊人数'， '治愈人数'， '死亡人数']] data_world_set.index = data_world['国家名称'] data_world_set.head（10）.plot（kind='bar'， figsize=（15， 10）） # 对排序前十个国家的数据进行绘图 plt.xlabel（'国家名称'， fontproperties=myfont） plt.xticks（fontproperties=myfont） plt.legend（fontsize=30， prop=myfont） # 设置图例例
+
+from pyecharts.charts import Map from pyecharts import options as opts from pyecharts.globals import CurrentConfig， NotebookType
+
+CurrentConfig.NOTEBOOK_TYPE = NotebookType.JUPYTER_NOTEBOOK name_map = { # 世界各国数据的中英文对比 '新加坡'， '多米尼加共和国'： '多米尼加'， '巴勒斯坦'： '巴勒斯坦'， '巴哈马'， '东帝汶'， '阿富汗'： '阿富汗'， '几内亚比绍'： '几内亚比绍'， “科特迪瓦”， '锡琛冰川'： '锡亚琴冰川'， “Br. Indian Ocean Ter.”： '英属印度洋领土'， '安哥拉'， '阿尔巴尼亚'， '阿拉伯联合酋长国'： '阿联酋'， '阿根廷'： '亚美尼亚'， '法属南和南极领地'， '法属南和南极领地'， '法属南和南极领地'， '澳大利亚'： '澳大利亚'， '奥地利'： '奥地利'， '阿塞拜疆'， '布隆迪'： '布隆迪'， '比利时'， '比利时'， '贝宁'， '布基纳法索'， '孟加拉国'， '保加利亚'： '保加利亚'， '巴哈马'， '波斯尼亚和赫兹'： '波斯尼亚和黑塞哥维那'， '白俄罗斯'， '伯利兹'： '伯利兹'， '百慕大'， '玻利维亚'， '巴西'， '文莱'， '不丹'： '不丹'， '博茨瓦纳'， '中非'， '加拿大'， '瑞士'： '瑞士'， '智利'， '中国'： '中国'， '象牙海岸'： '象牙海岸'， '喀麦隆'： '喀麦隆'， 'Dem. Rep. Congo'： '刚果民主共和国'， '刚果'， '哥伦比亚'， '哥斯达黎加'： '哥斯达黎加'， '古巴'： '古巴'， 'N. Cyprus'： '北塞浦路斯'， '塞浦路斯'， '塞浦路斯'， '捷克共和国'： '捷克'， '德国'， '吉布提'， '丹麦'， '阿尔及利亚'： '阿尔及利亚'， '厄瓜多尔'， '埃及'， '厄立特里亚'： '厄立特里亚'， '西班牙'： '西班牙'， '爱沙尼亚'： ''， '爱沙尼亚'： '埃塞俄比亚'， '芬兰'， '斐济'： '斐'， '福克兰群岛'， '法国'， '加蓬'， '英国'： '法国'， '加蓬'， '英国'： '法国'， '加蓬'， '英国'： '法国'， '加蓬'， '英国'： '法国'， '加蓬'， '英国'： '英国'， '格鲁吉亚'， '加纳'： '加纳'， '几内亚'： '几内亚'， '冈比亚'： '冈比亚'， '几内亚比绍'： '几内亚比绍'， 'Eq. 几内亚'： '赤道几内亚'， '希腊'， '格陵兰'， '危地马拉'： '危地马拉'， '法属圭亚那'： '法属'， '圭亚那'： '圭亚那'， '洪都拉斯'， '克罗地亚'， '海地'： '海地'， '匈牙利'， '印度尼西亚'， '印度'： '印度'， '爱尔兰'， '伊朗'， '伊拉克'， '冰岛'， '以色列'， '意大利'： '意大利'， '牙买加'， '约旦'， '日本'： '日本'， ''哈萨克斯坦'： '哈萨克斯坦'， '肯尼亚'： '肯尼亚'， '吉尔吉斯斯坦'， '柬埔寨'， '韩国'： '韩国'， '科索沃'， '科威特'： '科威特'， '老民主共和国'： '老挝'， '黎巴嫩'， '利比里亚'， '利比亚'， '斯里兰卡'， '莱索托'， '立陶宛'： '立陶宛'， '卢森堡'， '拉脱维亚'： '拉脱维亚'， '摩洛哥'， '摩尔多瓦'： '摩尔多瓦'， '马达加斯加'， '墨西哥'， '马其顿'： '马其顿'， '马里'， '缅甸'， '黑山'， '蒙古'， '莫桑比克'， '蒙古'， '莫桑比克'， '蒙古'， '莫桑比克'， '莫桑比克'， '蒙古'， '莫桑比克'， '莫桑比克'， '蒙古'， '莫桑比克'， '毛里塔尼亚'： '毛里塔尼亚'， '马拉维'： '马拉维'， '马来西亚'， '纳米比亚'， '纳米比亚'， '新喀里多尼亚'， '尼日尔'： '尼日尔'， '尼日利亚'， '尼加拉瓜'， '荷兰'： '荷兰'， '挪威'， '尼泊尔'， '尼泊尔'， '新西兰'， '阿曼'： '阿曼'， '巴基斯坦'： '巴基斯坦'， '巴拿马'， '秘鲁'， '菲律宾'： '菲律宾'， '巴布亚新几内亚'： '巴布亚新几内亚'， '波兰'， '波多黎各'， 'Dem. Rep. Korea'： '朝鲜'， '葡萄牙'， '巴拉圭'， '巴拉圭'， '卡塔尔'： '卡塔尔'， '罗马尼亚'： '巴拉圭'， '卡塔尔'， '罗马尼亚'： '科威特'， '罗马尼亚'： '巴拉圭'， '卡塔尔'， '罗马尼亚'： '罗马尼亚'， '俄罗斯'： '俄罗斯'， '卢旺达'： '卢旺达'， 'W. 撒哈拉'： '西撒哈拉'， '沙特阿拉伯'， '沙特阿拉伯'， '苏丹'： '苏丹'， 'S. 苏丹'： '南苏丹'， '塞内加尔'， '塞内加尔'， '所罗门群岛'， '塞拉利昂'， '萨尔瓦多'， '索马里兰'， '索马里兰'， '索马里'， '索马里'， '塞尔维亚'， '塞尔维亚'， '苏里南'， '斯洛伐克'： '斯洛伐克'， '斯洛文尼亚'， '瑞典'， '斯威士兰'， '叙利亚'， '乍得'： '乍得'， '多哥'， '泰国'， '塔吉克斯坦'： '塔吉克斯坦'， '土库曼斯坦'， '东帝汶'： '塔吉克斯坦'， '土库曼斯坦'， '东帝汶'： '塔吉克斯坦'： '土库曼斯坦'， '东帝汶'： '塔吉克斯坦'： '土库曼斯坦'， '东帝汶'： '塔吉克斯坦'： '泰国'， '土库曼斯坦'， '东帝汶'： '东帝汶'， '特立尼达和多巴哥'： '特里尼达和多巴哥'， '突尼斯'： '突尼斯'， '土耳其'， '坦桑尼亚'： '坦桑尼亚'， '乌干达'： '乌干达'， '乌克兰'， '乌拉圭'， '乌拉圭'， '美国'， '乌兹别克斯坦'， '乌兹别克斯坦'， '委内瑞拉'， '委内瑞拉'， '越南'： '越南'， '瓦努阿图'， '西岸'： '西岸'， '也门'， '南非'， '赞比亚'： '赞比亚'， '津巴布韦'： '津巴布韦'， '科摩罗'： '科摩罗' }
+
+map = Map(init_opts=opts.InitOpts(width="1900px", height="900px", bg_color="#ADD8E6", page_title="全球疫情确诊人数")) # 获得世界地图数据 map.add("确诊人数", [list(z) for z in zip(data_world['国家名称'], data_world['确诊人数'])], is_map_symbol_show=False, # 添加确诊人数信息 # 通过name_map来转化国家的中英文名称方便显示 maptype="world", label_opts=opts.LabelOpts(is_show=False), name_map=name_map, itemstyle_opts=opts.ItemStyleOpts(color="rgb(49,60,72)"), ).set_global_opts( visualmap_opts=opts.VisualMapOpts(max_=1000000), # 对视觉映射进行配置 ) map.render_notebook() # 在notebook中显示
+
+country = data_area_times.sort_values('province_confirmedCount', ascending=False).drop_duplicates( subset='countryName', keep='first').head(6)['countryName'] country = list(country) # 对于同一天采集的多个数据，只保留第一次出现的数据也就是最后一次更新的数据 country
+
+data_America = data_area_times[data_area_times['countryName'] == '美国'] data_Brazil = data_area_times[data_area_times['countryName'] == '巴西'] data_India = data_area_times[data_area_times['countryName'] == '印度'] data_Russia = data_area_times[data_area_times['countryName'] == '俄罗斯'] data_Peru = data_area_times[data_area_times['countryName'] == '秘鲁'] data_Chile = data_area_times[data_area_times['countryName'] == '智利']
+
+timeindex = data_area_times.index timeindex = timeindex.floor（'D'） # 对于日期索引，只保留具体到哪一天 data_area_times.index = timeindex
+
+时间序列 = pd。DataFrame（data_America.index） timeseries.index = data_America.index data_America = pd.concat（[timeseries， data_America]， axis=1） data_America.drop_duplicates（ subset='updateTime'， keep='first'， inplace=True） # 对美国数据进行处理，获得美国确诊人数的时间序列 data_America.drop（'updateTime'， axis=1， inplace=True）
+
+时间序列 = pd。DataFrame（data_Brazil.index） timeseries.index = data_Brazil.index data_Brazil = pd.concat（[timeseries， data_Brazil]， axis=1）
+
+对巴西数据进行处理，获得巴西确诊人数的时间序列
+data_Brazil.drop_duplicates（subset='updateTime'， keep='first'， inplace=True） data_Brazil.drop（'updateTime'， axis=1， inplace=True）
+
+时间序列 = pd。DataFrame（data_India.index） timeseries.index = data_India.index data_India = pd.concat（[timeseries， data_India]， axis=1）
+
+对印度数据进行处理，获得印度确诊人数的时间序列
+data_India.drop_duplicates（subset='updateTime'， keep='first'， inplace=True） data_India.drop（'updateTime'， axis=1， inplace=True）
+
+时间序列 = pd。DataFrame（data_Russia.index） timeseries.index = data_Russia.index data_Russia = pd.concat（[timeseries， data_Russia]， axis=1）
+
+对俄罗斯数据进行处理，获得俄罗斯确诊人数的时间序列
+data_Russia.drop_duplicates（subset='updateTime'， keep='first'， inplace=True） data_Russia.drop（'updateTime'， axis=1， inplace=True）
+
+时间序列 = pd。DataFrame（data_Peru.index） timeseries.index = data_Peru.index data_Peru = pd.concat（[timeseries， data_Peru]， axis=1）
+
+对秘鲁数据进行处理，获得秘鲁确诊人数的时间序列
+data_Peru.drop_duplicates（subset='updateTime'， keep='first'， inplace=True） data_Peru.drop（'updateTime'， axis=1， inplace=True）
+
+时间序列 = pd。DataFrame（data_Chile.index） timeseries.index = data_Chile.index data_Chile = pd.concat（[timeseries， data_Chile]， axis=1）
+
+对智利数据进行处理，获得智利确诊人数的时间序列
+data_Chile.drop_duplicates（subset='updateTime'， keep='first'， inplace=True） data_Chile.drop（'updateTime'， axis=1， inplace=True）
+
+plt.title（“世界疫情排行分布”， fontproperties=myfont） plt.plot（data_America['province_confirmedCount']） plt.plot（data_Brazil['province_confirmedCount']） plt.plot（data_India['province_confirmedCount']） plt.plot（data_Russia['province_confirmedCount']） plt.plot（data_Peru['province_confirmedCount']） plt.plot（data_Chile['province_confirmedCount']） plt.legend（country， prop=myfont）
+
+import jieba import re from wordcloud import WordCloud
+
+def word_cut（x）： return jieba.lcut（x） # 进行结巴分词
+
+news = [] reg = “[^\u4e00-\u9fa5]” for i in data_news['title']： if re.sub（reg， ''， i） ！= ''： # 去掉英文数字和标点等无关字符，仅保留中文词组 news.append（re.sub（reg， ''， i）） # 用news列表汇总处理后的新闻标题
+
+words = [] counts = {} for i in news： words.append（word_cut（i）） # 对所有新闻进行分词 for word in words： for a_word in word： if len（a_word） == 1： continue else： counts[a_word] = counts.get（a_word， 0）+1 # 用字典存储对应分词的词频 words_sort = list（counts.items（）） words_sort.sort（key=lambda x： x[1]， reverse=True）
+
+newcloud = WordCloud（font_path=r“D：\桌面\NotoSansCJK.otf”， background_color=“white”， width=600， height=300， max_words=50） # 生成词云 newcloud.generate_from_frequencies（counts） image = newcloud.to_image（） # 转换成图片图像
+
+from gensim.models import Word2Vec from sklearn.cluster import KMeans import warnings warnings.filterwarnings（'ignore'）
+
+字数 = []
+
+for i in news： words.append（word_cut（i）） model = Word2Vec（words， sg=0， size=300， window=5， min_count=5） # 词向量进行训练 keys = model.wv.vocab.keys（） # 获取词汇列表 wordvector = [] for key in keys： wordvector.append（model[key]） # 对词汇列表里的所有的词向量进行整合
+
+distortions = [] for i in range（1， 40）： word_kmeans = KMeans（n_clusters=i， init='k-means++'， n_init=10， max_iter=300， random_state=0） # 分别聚成1-40类 word_kmeans.fit（wordvector） distortions.append（word_kmeans.inertia_） # 算出样本距离最近的聚类中心的距离总和
+
+plt.plot（range（1， 40）， distortions， marker='o'） # 绘图 plt.xlabel（'Number of clusters'） plt.ylabel（'Distortion'）
+
+word_kmeans = KMeans（n_clusters=10） # 聚成10类 word_kmeans.fit（wordvector）
+
+标签 = word_kmeans.标签_
+
+for num in range（0， 10）： text = [] for i in range（len（keys））： if labels[i] == num： text.append（list（keys）[i]） # 分别获得10类的聚类结果 print（text）
+
+sum_GDP = ['国内生产总值'， '第一产业增加值'， '第二产业增加值'， '第三产业增加值'] industry_GDP = ['农林牧渔业增加值'， '工业增加值'， '制造业增加值'， '建筑业增加值'] industry2_GDP = ['批发和零售业增加值'， '交通运输、仓储和邮政业增加值'， '住宿和餐饮业增加值'， '金融业增加值'] industry3_GDP = ['房地产业增加值'， '信息传输、软件和信息技术服务业增加值'， '租赁和商务服务业增加值'， '其他行业增加值'] # 对不同行业分四类来展现
+
+fig = plt.figure（） fig， axes = plt.subplots（2， 2， figsize=（21， 15）） # 分别用四个子图来展现数据变化情况
+
+axes[0][0].plot（data_economy[sum_GDP]） axes[0][0].legend（sum_GDP， prop=myfont） axes[0][1].plot（data_economy[industry_GDP]） axes[0][1].legend（industry_GDP， prop=myfont） axes[1][0].plot（data_economy[industry2_GDP]） axes[1][0].legend（industry2_GDP， prop=myfont） axes[1][1].plot（data_economy[industry3_GDP]） axes[1][1].legend（industry3_GDP， prop=myfont）
+
+plt.title（'分行业GDP变化图'， fontproperties=myfont）
+
+from statsmodels.graphics.tsaplots import plot_acf from pandas.plotting import autocorrelation_plot from statsmodels.sandbox.stats.diagnostic import acorr_ljungbox
+
+GDP_type = ['国内生产总值', '第一产业增加值', '第二产业增加值', '第三产业增加值', '农林牧渔业增加值', '工业增加值', '制造业增加值', '建筑业增加值', '批发和零售业增加值', '交通运输、仓储和邮政业增加值', '住宿和餐饮业增加值', '金融业增加值', '房地产业增加值', '信息传输、软件和信息技术服务业增加值', '租赁和商务服务业增加值', '其他行业增加值']
+
+对于GDP_type中的 i： each_data = data_economy[i][：-2] plt.figure（figsize=（30， 6）） ax1 = plt.subplot（1， 3， 1） ax2 = plt.subplot（1， 3， 2） ax3 = plt.subplot（1， 3， 3） LB2， P2 = acorr_ljungbox（each_data） # 进行纯性随机检验 plot_acf（each_data， ax=ax1） autocorrelation_plot（each_data， ax=ax2） # 进行平稳性检验 ax3.plot（P2）
+
+from statsmodels.tsa.arima_model import ARMA
+from statsmodels.tsa.stattools import arma_order_select_ic
+
+warnings.filterwarnings（'ignore'） data_arma = pd.DataFrame（data_economy['国内生产总值'][：-2]） # 选取疫情期前的16个季度进行建模 a， b = arma_order_select_ic（data_arma， ic='hqic'）['hqic_min_order'] arma = ARMA（data_arma， order=（a， b））.fit（） # 使用ARMA建模率1 = list（data_economy['国内生产总值'][-2] / arma.forecast（steps=1）[0]） # 获得疫情期当季度的预测值 rate1 # 实际值与预测值的比率
+
+from pyecharts import options as opts from pyecharts.charts import Liquid
+
+c = （ Liquid（） .add（“实际值/预测值”， rate1， is_outline_show=False） .set_global_opts（title_opts=opts.TitleOpts（title=“第一季度国民生产总值实际值与预测值比例”， pos_left=“center”）） ） c.render_notebook（）
+
+warnings.filterwarnings（'ignore'） data_arma = pd.DataFrame（data_economy['工业增加值'][：-2]） a， b = arma_order_select_ic（data_arma， ic='hqic'）['hqic_min_order'] arma = ARMA（data_arma， order=（a， b））.fit（） rate2 = list（data_economy['工业增加值'][-2]/arma.forecast（steps=1）[0]） c = （ Liquid（） .add（“实际值/预测值”， rate2， is_outline_show=False） .set_global_opts（title_opts=opts.TitleOpts（title=“工业增加值比例”， pos_left=“center”）） c.render_notebook（）
+
+warnings.filterwarnings（'ignore'） data_arma = pd.DataFrame（data_economy['制造业增加值'][：-2]） a， b = arma_order_select_ic（data_arma， ic='hqic'）['hqic_min_order'] arma = ARMA（data_arma， order=（a， b））.fit（） rate3 = list（data_economy['制造业增加值'][-2]/arma.forecast（steps=1）[0]） c = （ Liquid（） .add（“实际值/预测值”， rate3， is_outline_show=False） .set_global_opts（title_opts=opts.TitleOpts（title=“制造业增加值”， pos_left=“center”）） c.render_notebook（）
+
+data_arma = pd.DataFrame（data_economy['批发和零售业增加值'][：-2]） a， b = arma_order_select_ic（data_arma， ic='hqic'）['hqic_min_order'] arma = ARMA（data_arma， order=（a， b））.fit（） rate4 = list（data_economy['批发和零售业增加值'][-2]/arma.forecast（steps=1）[0]） c = （ Liquid（） .add（“实际值/预测值”， rate4， is_outline_show=False） .set_global_opts（title_opts=opts.TitleOpts（title=“批发和零售业增加值”， pos_left=“center”）） c.render_notebook（）
+
+data_arma = pd.DataFrame（data_economy['金融业增加值'][：-2]） a， b = arma_order_select_ic（data_arma， ic='hqic'）['hqic_min_order'] arma = ARMA（data_arma， order=（a， b））.fit（） rate = list（data_economy['金融业增加值'][-2]/arma.forecast（steps=1）[0]） c = （ Liquid（） .add（“实际值/预测值”， rate， is_outline_show=False） .set_global_opts（title_opts=opts.TitleOpts（title=“金融业增加值”， pos_left=“center”）） c.render_notebook（）
+
+data_arma = pd.DataFrame（data_economy['信息传输、软件和信息技术服务业增加值'][：-2]） a， b = arma_order_select_ic（data_arma， ic='hqic'）['hqic_min_order'] arma = ARMA（data_arma， order=（a， b））.fit（） rate = list（data_economy['信息传输、软件和信息技术服务业增加值'][-2]/arma.forecast（steps=1）[0]） c = （ Liquid（） .add（“实际值/预测值”， rate， is_outline_show=False） .set_global_opts（title_opts=opts.TitleOpts（title=“信息传输、软件和信息技术服务业增加值”， pos_left=“center”）） c.render_notebook（）
